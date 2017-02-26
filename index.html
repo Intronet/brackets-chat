@@ -1,0 +1,433 @@
+<!doctype html>
+<html>
+
+<head>
+   <title>Socket.IO chat</title>
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+         font-size: 12px;
+      }
+      
+      html {
+         height: 100%;
+      }
+      
+      body {
+         height: 100%;
+         position: relative;
+         font: 13px sans-serf, Helvetica, Arial;
+         background: #fff;
+      }
+      
+      #messenger {
+         display: none;
+      }
+      #messenger form {
+         background: #eee;
+         height: 150px;
+         padding: 20px 0 0;
+         position: fixed;
+         bottom: 0;
+         width: 100%;
+         margin: 0;
+         border-top: solid 1px #ddd;
+      }
+      #messenger form .textarea {
+         border-radius: 3px;
+         border: solid 1px #ddd;
+         resize: none;
+         5px;
+         right: 1px;
+         bottom: 10px;
+         width: 98%;
+         margin: 0 1%;
+         padding: 5px;
+         height: 80px;
+         background: #fff;
+         overflow: auto;
+      }
+      #messenger form .textarea[placeholder]:empty:before {
+         content: attr(placeholder);
+         color: #555;
+      }
+      #messenger form .textarea[placeholder]:empty:focus:before {
+         content: "";
+      }
+      #messenger form button {
+         float: right;
+         border-radius: 3px;
+         right: 1px;
+         bottom: 10px;
+         padding: 5px 10px;
+         margin: 10px 1% 0;
+         border: none;
+         background: #288edf;
+         color: #fff
+      }
+      #messenger #users {
+         position: absolute;
+         right: -1px;
+         top: 60px;
+         height: 723px;
+         width: 25%;
+         border: 0;
+         border-left: solid 1px #ddd;
+         overflow: auto;
+         padding: 5px;
+      }
+      #messenger form button#logOut {
+         float: left;
+      }
+      #messenger div.header {
+         position: fixed;
+         top: 0;
+         left: 0;
+         padding: 3px 0 0 10px;
+         width: 100%;
+         background: #288EDF;
+         color: #fff;
+         border-bottom: solid 1px #ddd;
+         z-index: 1;
+         height: 60px;
+         line-height: 19px;
+      }
+      #messenger div.header h3 {
+         position: relative;
+         font-size: 1.5em
+      }
+      #messages {
+         margin: 70px 0 150px 0;
+      }
+      #messages {
+         list-style-type: none;
+         padding: 0;
+         padding-bottom: 10px;
+      }
+      #messages li {
+         padding: 5px 5px 10px 5px;
+         margin: 10px 27% 15px 10px;
+         border-bottom: solid 1px #ddd;
+         /*border-radius: 5px;
+         border: solid 1px #eee;
+         box-shadow: 2px 2px 5px #888888;*/
+      }
+      #messages li .message{
+         overflow: auto;
+         max-height: 250px;
+      }
+      #messages li ins {
+         display: block;
+         text-align: right;
+         text-decoration: none;
+      }
+      #messages li span {
+         position: relative;
+         margin: 5px 0 5px 0;
+         display: block;
+         font-weight: normal;
+         font-size: 1.2em;
+         font-style: normal;
+         color: #288edf;
+      }
+      #messages li:nth-child(odd) {
+         /*background: #eee;*/
+      }
+      #messages li.latest {
+         /*background: #288edf;
+         color: #fff;*/
+      }
+      #messages li.latest span {
+         /*color: #fff;*/
+      }
+      #messages li.whisper {
+         /*background: #ddd;
+         color: #333;*/
+      }
+      #messages li.whisper span {
+         /*color: #288edf;*/
+      }
+      #messages li:hover {
+         /*background: #15466D;
+         color: #fff;*/
+      }
+      #messages li:hover span {
+         /*color: #288edf;*/
+      }
+      #login {
+         width: 90%;
+         padding: 20px;
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         border: solid 1px #ddd;
+         text-align: center;
+         border-radius: 5px;
+         margin: -10% 0 0 -45%;
+         background: #eee
+      }
+      #login input {
+         border-radius: 5px;
+         border: 1px solid #ddd;
+         height: 25px;
+         padding: 0 10px 0 5px;
+      }
+      #login #exists {
+         display: block;
+         position: relative;
+         margin: 2px 0 -17px 0;
+         color: #f00;
+      }
+      #login button {
+         border-radius: 0 5px 5px 0;
+         border: 1px solid #288edf;
+         height: 25px;
+         padding: 0 10px;
+         position: relative;
+         margin: 0 0 0 -5px;
+         background: #288edf;
+         color: #fff;
+      }
+      #messenger form .textarea:focus,
+      #login input:focus {
+         outline: none;
+         border: solid 1px #288edf;
+      }
+   </style>
+</head>
+
+<body>
+
+   <form id="login" action="javascript:;">
+      <h3>Instant Messenger</h3>
+      <p>Create a user name and click the button to join the conversation</p>
+      <p>
+         <input type="text" id="name" name="yourName">
+         <button id="loginBtn">OK</button>
+      </p>
+   </form>
+
+   <div id="messenger">
+      <div class="header">
+         <h3>Instant Messenger</h3>
+         <p>Type you message and click the button to send</p>
+         <select title="Click on a name to send a private message" size="10" id="users">
+            <option value="*">-- ALL --</option>
+         </select>
+      </div>
+      <ul id="messages"></ul>
+      <form action="javascript:;">
+         <section class="textarea" id="m" placeholder="Type something..." contenteditable="true"></section>
+         <button id="send">Send</button>
+         <button id="logOut">Quit</button>
+      </form>
+   </div>
+
+   <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+   <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+   <script>
+      (function() {
+         var
+            i,
+            user,
+            socket = io(),
+            id = Math.random(),
+            audioCtx = new(window.AudioContext || window.webkitAudioContext || window.audioContext);
+
+         $('#messenger #send').click(function() {
+            if($('#m').text().replace(" ", "").length) {
+            //if ($('#m').val() && $('#m').val().indexOf('  ') == -1 && $('#m').val() !== " ") {
+               var
+                  message = $('#m').html(),
+                  time = new Date().toTimeString(),
+                  re = /\d{2}:\d{2}:\d{2}/;
+               socket.emit('chat message', {
+                  user: user,
+                  message: message,
+                  time: re.exec(time)[0],
+                  id: id,
+                  sendTo: $('#users').val()
+               });
+
+            }
+            $('#m').empty().focus();
+            //$('#m').val('').focus();
+         });
+
+         socket.on('checkuser', function(msg, conversation, users) {
+            $('#exists').remove();
+            if (msg.id === id) {
+               if (msg.usersExists !== undefined) {
+                  $('#loginBtn').after('<span id="exists">' + msg.user + ' exists - try again<\/span>');
+                  return;
+               } else {
+                  $('#messenger').fadeIn();
+                  $('#login').hide();
+                  user = msg.user;
+                  $('#messenger h3').append('<br>Welcome ' + user);
+                  //$('#users option:first').after('<option value="' + msg.user + '">' + msg.user + '<\/option>');
+                  socket.emit('chat message', {
+                     user: msg.user,
+                     message: msg.message,
+                     time: msg.time,
+                     id: msg.id,
+                     sendTo: '*'
+                  });
+               }
+            }
+         });
+         /**********************************************************
+                  All arguments are optional:
+
+                  duration of the tone in milliseconds. Default is 500
+                  frequency of the tone in hertz. default is 440
+                  volume of the tone. Default is 1, off is 0.
+                  type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+                  callback to use on end of tone
+         **********************************************************/
+         function beep(duration, frequency, volume, type, callback) {
+            duration = 50;
+            frequency = 900;
+            type = 'square';
+            var oscillator = audioCtx.createOscillator();
+            var gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (volume) {
+               gainNode.gain.value = volume;
+            };
+            if (frequency) {
+               oscillator.frequency.value = frequency;
+            }
+            if (type) {
+               oscillator.type = type;
+            }
+            if (callback) {
+               oscillator.onended = callback;
+            }
+
+            oscillator.start();
+            setTimeout(function() {
+               oscillator.stop()
+            }, (duration ? duration : 500));
+         };
+
+         socket.on('chat message', function(msg, conversation, users) {
+            $('#m').focus();
+            users = users.replace(/"(.*?)"/g, '$1').replace(/\[(.*?)\]/g, '$1').split(',');
+            conversation = JSON.parse(conversation);
+            if (msg.id === id && (
+                  msg.message === "has left the conversation" ||
+                  msg.invalid !== undefined ||
+                  users.indexOf(user) === -1
+               )) {
+               beep();
+               setTimeout(function() {
+                  location.reload();
+               }, 60);
+            } else {
+               var
+                  msgHTML = '',
+                  usersHTML = '<option selected style="text-align:center" value="*">-- ALL --<\/option>';
+
+               conversation.forEach(function(entry) {
+                  if (entry.sendTo === "*") {
+                     msgHTML += '<li><span>' + entry.user + '<\/span> <div class="message">' + entry.message + '</div><ins>' + entry.time + '<\/ins><\/li>';
+                  } else
+                  if (entry.sendTo === user || entry.user === user) {
+                     msgHTML += '<li class="whisper"><span>' + entry.user + ' &nbsp;&nbsp;&#8703;&nbsp;&nbsp; ' + entry.sendTo + '<\/span> <div class="message">' + entry.message + '</div><ins>' + entry.time + '<\/ins><\/li>';
+                  }
+               });
+
+               for (i = 0; i < users.length; i++) {
+                  if (users[i] !== user) {
+                     usersHTML += '<option value="' + users[i] + '">' + users[i] + '<\/option>';
+                  }
+               }
+
+               $('#users').html(usersHTML).change();
+               /*
+               if(msg.sendTo === user){
+                  $('#users').val(msg.user)
+               }        
+               if(msg.sendTo !== "*" && msg.user === user ){
+                  $('#users').val(msg.sendTo);
+               }
+               */
+               $('#messages').html(msgHTML).find('li:last').addClass('latest');
+               $('#messages a').attr('target','_blank');
+
+               if (($('#messages li.latest').position().top + $('#messages li.latest').height() + 75) > $('#messenger form').position().top) {
+                  $("body").animate({
+                     scrollTop: ($(document).height() - $(window).height())
+                  }, 100);
+               }
+               beep();
+            }
+         });
+
+         $('#name').val('').focus();
+         $('#loginBtn').click(function() {
+            $('#exists').remove();
+            var
+               user = $('#name').val(),
+               message = "has joined the conversation",
+               time = new Date().toTimeString(),
+               re = /\d{2}:\d{2}:\d{2}/;
+            if ($('#name').val() && $('#name').val().indexOf('  ') == -1 && $('#name').val() !== " ") {
+               socket.emit('checkuser', {
+                  user: user,
+                  message: message,
+                  time: re.exec(time)[0],
+                  id: id
+               });
+            }
+            $('#name').val('').focus();
+         });
+
+         function logOut() {
+            var
+               message = "has left the conversation",
+               time = new Date().toTimeString(),
+               re = /\d{2}:\d{2}:\d{2}/;
+            socket.emit('logout', {
+               user: user,
+               message: message,
+               time: re.exec(time)[0],
+               id: id,
+               sendTo: '*'
+            });
+         }
+
+         $('#logOut').on('click', logOut);
+         $(window).on('unload', logOut);
+         $(window).resize(function() {
+            $('#messenger #users').height(($(window).height() - 220));
+         }).resize();
+         $('#messenger select').on('change', function() {
+            var sendTo = $(this).val();
+            if (sendTo === "*") {
+               sendTo = "ALL";
+            }
+            $('#m').attr({
+               'placeholder': 'Send to ' + sendTo,
+               'title': 'Send to ' + sendTo
+            });
+         });
+
+         $(".textarea").focusout(function() {
+            var element = $(this);
+            if (!element.text().replace(" ", "").length) {
+               element.empty();
+            }
+         });
+        
+      }());
+   </script>
+</body>
+
+</html>
