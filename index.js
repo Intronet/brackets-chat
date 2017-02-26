@@ -53,6 +53,6 @@ io.on('connection', function (socket) {
   
 });
 
-http.listen(PORT,function () {
+http.listen(8888, function () {
    console.log('listening on *:8888');
 });
